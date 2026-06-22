@@ -258,6 +258,9 @@ export default function App() {
   return (
     <div className={`min-h-screen text-gray-100 flex flex-col select-none relative transition-all duration-700 ${getThemeBackgroundStyles()}`}>
       
+      {/* Official Cfx client background radial ambient glow */}
+      <div className="absolute inset-0 opacity-25 pointer-events-none z-0" style={{ backgroundImage: "radial-gradient(circle at 50% -10%, #f34235 0%, transparent 60%)" }} />
+
       {/* 1. TOP HEADER PANEL */}
       <header className="bg-black/60 border-b border-fivem-border/40 p-4 sticky top-0 z-30 backdrop-blur-md flex justify-between items-center">
         <div className="flex items-center gap-3">
