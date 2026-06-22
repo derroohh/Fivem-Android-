@@ -1,0 +1,6 @@
+{
+  "name": "FiveM Mobile Client",
+  "description": "A high-fidelity mobile companion and launcher client for FiveM, featuring live server listings, real-time Cfx global chat, interactive direct messaging, customizable styling themes, and simulated server loading screens with telemetry widgets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  
+  --color-fivem-orange: #ff5e1a;
+  --color-fivem-orange-hover: #e04a0d;
+  --color-fivem-dark: #0f0f12;
+  --color-fivem-surface: #16161c;
+  --color-fivem-border: #2c2c36;
+}
+
+/* Custom styles for gaming UI visual depth */
+@layer utilities {
+  .glow-orange {
+    text-shadow: 0 0 8px rgba(255, 94, 26, 0.6);
+  }
+  .glow-border {
+    box-shadow: 0 0 15px rgba(255, 94, 26, 0.2);
+  }
+  .glass-panel {
+    background: rgba(22, 22, 28, 0.85);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .glass-panel-heavy {
+    background: rgba(15, 15, 18, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .neon-card-glow {
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Hide standard HTML scrollbar but keep interactive scrolling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 94, 26, 0.4);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 94, 26, 0.8);
+}
+
+/* Custom CRT scanline effect for that real developer console look */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+.scanlines::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 2;
+  background-size: 100% 2px, 3px 100%;
+  pointer-events: none;
+}
+
+body {
+  background-color: var(--color-fivem-dark);
+  color: #f3f4f6;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
