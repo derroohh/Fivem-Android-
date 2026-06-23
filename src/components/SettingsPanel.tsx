@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   User, 
   Sparkles, 
@@ -43,6 +43,15 @@ export default function SettingsPanel({ settings, onChangeSettings }: SettingsPa
   const [compileState, setCompileState] = useState<"idle" | "compiling" | "success">("idle");
   const [compileProgress, setCompileProgress] = useState(0);
   const [compileLog, setCompileLog] = useState<string[]>([]);
+  const compileIntervalRef = useRef<any>(null);
+
+  useEffect(() => {
+    return () => {
+      if (compileIntervalRef.current) {
+        clearInterval(compileIntervalRef.current);
+      }
+    };
+  }, []);
 
   const runApkCompiler = () => {
     if (compileState === "compiling") return;
@@ -61,13 +70,17 @@ export default function SettingsPanel({ settings, onChangeSettings }: SettingsPa
     ];
 
     let currentStep = 0;
-    const interval = setInterval(() => {
+    if (compileIntervalRef.current) {
+      clearInterval(compileIntervalRef.current);
+    }
+    compileIntervalRef.current = setInterval(() => {
       if (currentStep < steps.length) {
         setCompileProgress(steps[currentStep].prg);
         setCompileLog(prev => [...prev, steps[currentStep].log]);
         currentStep++;
       } else {
-        clearInterval(interval);
+        clearInterval(compileIntervalRef.current);
+        compileIntervalRef.current = null;
         setCompileState("success");
       }
     }, 600);
