@@ -27,6 +27,7 @@ interface GameHUDCompanionProps {
   userName: string;
   avatarUrl: string;
   onDisconnect: () => void;
+  isOfflineMode?: boolean;
 }
 
 interface InGameNotice {
@@ -58,7 +59,7 @@ const MOCK_GAME_CHATS = [
   { id: "gc-3", sender: "LSPD_Hutch", content: "[Dispatch] Code 10-31 Active: High speed pursuit near Vinewood Boulevard. Officers stay clear.", time: "09:18" }
 ];
 
-const LOADING_STEPS = [
+const LOADING_STEPS_ONLINE = [
   "Connecting to cfx.re load-balancer gateway ...",
   "Sending secure Cfx.re mobile authentication tokens ...",
   "Handshaking voice server VOIP channels ...",
@@ -69,20 +70,33 @@ const LOADING_STEPS = [
   "Spawning personal character profile model in Los Santos ..."
 ];
 
+const LOADING_STEPS_OFFLINE = [
+  "Initializing local Vulkan GPU shaders pipeline...",
+  "Allocating system RAM heap for offline sandbox execution...",
+  "Mounting local game packaging /sdcard/Android/obb/ (12.42 GB)...",
+  "Verifying base.obb map tiles & asset hash indexes...",
+  "Inlining offline cheats trainer structures (native C++)...",
+  "Spawning high-performance loopback graphics backbuffer...",
+  "Locking frames pacing to matching Android screen Hertz...",
+  "Launching offline singleplayer Los Santos emulator..."
+];
+
 export default function GameHUDCompanion({ 
   server, 
   settingsPing, 
   userName, 
   avatarUrl, 
-  onDisconnect 
+  onDisconnect,
+  isOfflineMode = false
 }: GameHUDCompanionProps) {
+  const steps = isOfflineMode ? LOADING_STEPS_OFFLINE : LOADING_STEPS_ONLINE;
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [loadingStepText, setLoadingStepText] = useState(LOADING_STEPS[0]);
+  const [loadingStepText, setLoadingStepText] = useState(steps[0]);
   const [connectionPhase, setConnectionPhase] = useState<"loading" | "connected">("loading");
 
   // In-Game dashboard states
   const [activeTab, setActiveTab] = useState<"telemetry" | "map" | "economy" | "chat">("telemetry");
-  const [pingValue, setPingValue] = useState(server.ping + settingsPing);
+  const [pingValue, setPingValue] = useState(isOfflineMode ? 0 : server.ping + settingsPing);
   const [playerCash, setPlayerCash] = useState(4825);
   const [playerBank, setPlayerBank] = useState(892000);
   const [activeCoords, setActiveCoords] = useState({ x: 231, y: 154 });
@@ -95,9 +109,9 @@ export default function GameHUDCompanion({
 
   // In-game system alerts & dispatches
   const [notices, setNotices] = useState<InGameNotice[]>([
-    { id: "n-1", title: "Wage Received", text: "+ $1,250 earned from completing mechanic task flow.", time: "Just now", type: "economy" },
-    { id: "n-2", title: "Police Dispatch Alerts", text: "Code 3 bank vault intrusion warning triggered in Pacific Vault.", time: "1 min ago", type: "police" },
-    { id: "n-3", title: "Server Announcement", text: "Restarting game client thread segments shortly for routine CDN hot-fix.", time: "5 min ago", type: "system" }
+    { id: "n-1", title: isOfflineMode ? "Sandbox Loaded" : "Wage Received", text: isOfflineMode ? "Offline Trainer engine initialized successfully. Press keys to inject cheats." : "+ $1,250 earned from completing mechanic task flow.", time: "Just now", type: isOfflineMode ? "system" : "economy" },
+    { id: "n-2", title: isOfflineMode ? "OBB Directory Verified" : "Police Dispatch Alerts", text: isOfflineMode ? "All storage files present. External assets verified successfully." : "Code 3 bank vault intrusion warning triggered in Pacific Vault.", time: "1 min ago", type: isOfflineMode ? "system" : "police" },
+    { id: "n-3", title: isOfflineMode ? "Offline Cheat Engine" : "Server Announcement", text: isOfflineMode ? "Ready. Local CPU temperature: 38°C. GPU usage: 42% @ 60 FPS stable." : "Restarting game client thread segments shortly for routine CDN hot-fix.", time: "5 min ago", type: "system" }
   ]);
 
   const gameChatRef = useRef<HTMLDivElement>(null);
@@ -111,10 +125,10 @@ export default function GameHUDCompanion({
         const next = Math.min(prev + additive, 100);
         
         // Update text labels incrementally based on progress percentages
-        const currentStep = Math.floor((next / 100) * LOADING_STEPS.length);
-        if (currentStep < LOADING_STEPS.length && currentStep !== stepIndex) {
+        const currentStep = Math.floor((next / 100) * steps.length);
+        if (currentStep < steps.length && currentStep !== stepIndex) {
           stepIndex = currentStep;
-          setLoadingStepText(LOADING_STEPS[currentStep]);
+          setLoadingStepText(steps[currentStep]);
         }
 
         if (next >= 100) {
@@ -128,7 +142,7 @@ export default function GameHUDCompanion({
     }, 180);
 
     return () => clearInterval(progressInterval);
-  }, []);
+  }, [steps]);
 
   // Playtime Timer counts seconds in background
   useEffect(() => {
@@ -351,11 +365,18 @@ export default function GameHUDCompanion({
             <span className="text-white font-bold">{formatPlaytime(sessionPlaytime)}</span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <Wifi size={11} className={pingValue < 25 ? "text-emerald-400" : "text-yellow-400"} />
-            <span>PING:</span>
-            <span className={`font-bold ${pingValue < 25 ? "text-emerald-400" : "text-gray-300"}`}>{pingValue}ms</span>
-          </div>
+          {isOfflineMode ? (
+            <div className="flex items-center gap-1 text-[11px] text-amber-400 font-bold font-mono">
+              <span className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse inline-block select-none mr-1" />
+              <span>OFFLINE STANDALONE [0ms LOOPBACK]</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <Wifi size={11} className={pingValue < 25 ? "text-emerald-400" : "text-yellow-400"} />
+              <span>PING:</span>
+              <span className={`font-bold ${pingValue < 25 ? "text-emerald-400" : "text-gray-300"}`}>{pingValue}ms</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -417,22 +438,115 @@ export default function GameHUDCompanion({
               <div id="telemetry-panel" className="space-y-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="glass-panel p-4 rounded-xl border border-fivem-border/60">
-                    <span className="text-[10px] text-gray-500 block uppercase font-mono font-bold">Websockets status</span>
-                    <span className="text-sm font-bold font-mono text-emerald-400 block mt-1">SECURE_ACTIVE_LINK</span>
+                    <span className="text-[10px] text-gray-500 block uppercase font-mono font-bold">Client Socket status</span>
+                    <span className={`text-sm font-bold font-mono block mt-1 ${isOfflineMode ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      {isOfflineMode ? "OFFLINE_SANDBOX" : "SECURE_ACTIVE_LINK"}
+                    </span>
                   </div>
                   <div className="glass-panel p-4 rounded-xl border border-fivem-border/60">
-                    <span className="text-[10px] text-gray-500 block uppercase font-mono font-bold">Tickrate</span>
-                    <span className="text-sm font-bold font-mono text-white block mt-1">128 HZ STATE</span>
+                    <span className="text-[10px] text-gray-500 block uppercase font-mono font-bold">Render Engine State</span>
+                    <span className="text-sm font-bold font-mono text-white block mt-1">
+                      {isOfflineMode ? "VULKAN_1.3_60HZ" : "128 HZ STATE"}
+                    </span>
                   </div>
                   <div className="glass-panel p-4 rounded-xl border border-fivem-border/60">
                     <span className="text-[10px] text-gray-500 block uppercase font-mono font-bold">Voice Network</span>
-                    <span className="text-sm font-bold font-mono text-emerald-400 block mt-1">VOIP_READY</span>
+                    <span className={`text-sm font-bold font-mono block mt-1 ${isOfflineMode ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      {isOfflineMode ? "LOCAL_LOOPBACK" : "VOIP_READY"}
+                    </span>
                   </div>
                   <div className="glass-panel p-4 rounded-xl border border-fivem-border/60">
                     <span className="text-[10px] text-gray-500 block uppercase font-mono font-bold">Loaded scripts</span>
-                    <span className="text-sm font-bold font-mono text-orange-400 block mt-1">412 ACTIVE RES</span>
+                    <span className="text-sm font-bold font-mono text-orange-400 block mt-1">
+                      {isOfflineMode ? "TRAINER_ACTIVE" : "412 ACTIVE RES"}
+                    </span>
                   </div>
                 </div>
+
+                {/* Simulated APK Trainer HUD cheat codes injector if offline */}
+                {isOfflineMode && (
+                  <div className="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-[#120a02] to-[#1e1302] space-y-4 shadow-xl">
+                    <h3 className="text-xs font-mono font-extrabold text-amber-400 uppercase tracking-widest flex items-center gap-2 border-b border-fivem-border/20 pb-2.5">
+                      <Coins size={14} />
+                      🛠️ Standalone Offline Trainer HUD Menu
+                    </h3>
+                    <p className="text-[11px] text-gray-400">Inject cheats and parameters directly into the Vulkan local sandbox runtime memory:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        id="cheat-cash-inject"
+                        onClick={() => {
+                          setPlayerCash(prev => prev + 500000);
+                          const tNotice = {
+                            id: `n-${Date.now()}`,
+                            title: "Trainer Injection",
+                            text: "Successfully injected $500,000 cash directly into emulated RAM heap.",
+                            time: "Just now",
+                            type: "economy" as any
+                          };
+                          setNotices(prev => [tNotice, ...prev]);
+                        }}
+                        className="p-2.5 rounded-lg bg-black/45 hover:bg-black/70 border border-amber-500/20 hover:border-amber-400 text-[10px] font-mono text-amber-300 text-left transition-all cursor-pointer flex items-center justify-between"
+                      >
+                        <span>Spawn $500k cash</span>
+                        <span className="text-[8px] bg-amber-500/10 text-amber-400 px-1 rounded-sm uppercase">RAM</span>
+                      </button>
+                      
+                      <button
+                        id="cheat-spawn-car"
+                        onClick={() => {
+                          const tNotice = {
+                            id: `n-${Date.now()}`,
+                            title: "Vehicle Spawned",
+                            text: "Injected customized Pfister Comet sports engine at local vector coordinates.",
+                            time: "Just now",
+                            type: "system" as any
+                          };
+                          setNotices(prev => [tNotice, ...prev]);
+                        }}
+                        className="p-2.5 rounded-lg bg-black/45 hover:bg-black/70 border border-amber-500/20 hover:border-amber-400 text-[10px] font-mono text-amber-300 text-left transition-all cursor-pointer flex items-center justify-between"
+                      >
+                        <span>Spawn Pfister Comet</span>
+                        <span className="text-[8px] bg-amber-500/10 text-amber-400 px-1 rounded-sm uppercase font-bold">CAR</span>
+                      </button>
+
+                      <button
+                        id="cheat-set-weather"
+                        onClick={() => {
+                          const tNotice = {
+                            id: `n-${Date.now()}`,
+                            title: "Weather Altered",
+                            text: "Forced sandbox simulation sky state to: [Golden hour / Cinematic sunset].",
+                            time: "Just now",
+                            type: "system" as any
+                          };
+                          setNotices(prev => [tNotice, ...prev]);
+                        }}
+                        className="p-2.5 rounded-lg bg-black/45 hover:bg-black/70 border border-amber-500/20 hover:border-amber-400 text-[10px] font-mono text-amber-300 text-left transition-all cursor-pointer flex items-center justify-between"
+                      >
+                        <span>Set Golden Hour Sky</span>
+                        <span className="text-[8px] bg-amber-500/10 text-amber-400 px-1 rounded-sm uppercase">SKY</span>
+                      </button>
+
+                      <button
+                        id="cheat-infinite-armour"
+                        onClick={() => {
+                          const tNotice = {
+                            id: `n-${Date.now()}`,
+                            title: "Cheat Activated",
+                            text: "Secured maximum carbon bulletproof Kevlar armor state (Continuous loop active).",
+                            time: "Just now",
+                            type: "admin" as any
+                          };
+                          setNotices(prev => [tNotice, ...prev]);
+                        }}
+                        className="p-2.5 rounded-lg bg-black/45 hover:bg-black/70 border border-amber-500/20 hover:border-amber-400 text-[10px] font-mono text-amber-300 text-left transition-all cursor-pointer flex items-center justify-between"
+                      >
+                        <span>Toggle Infinite Armor</span>
+                        <span className="text-[8px] bg-amber-500/10 text-amber-400 px-1 rounded-sm uppercase font-bold">GOD</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="glass-panel p-5 rounded-2xl border border-fivem-border/70 space-y-4">
                   <h3 className="text-xs font-mono font-extrabold text-fivem-orange uppercase tracking-widest flex items-center gap-2 border-b border-fivem-border/40 pb-2.5">
@@ -442,11 +556,11 @@ export default function GameHUDCompanion({
                   <div className="space-y-3 font-mono text-xs">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-400">Simulation thread allocation:</span>
-                      <span className="text-white">Active (8 threads)</span>
+                      <span className="text-white">Active ({isOfflineMode ? "4 hardware threads allocated" : "8 threads"})</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-400">Memory usage:</span>
-                      <span className="text-white">1,242 MB (Buffered)</span>
+                      <span className="text-white">{isOfflineMode ? "914 MB (Vulkan textures optimal)" : "1,242 MB (Buffered)"}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-400">GPU Texture Draw speed:</span>
@@ -454,19 +568,33 @@ export default function GameHUDCompanion({
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-gray-400">Cfx license status:</span>
-                      <span className="text-emerald-400">AUTHENTICATED (Cfx License #32a19b)</span>
+                      <span className="text-emerald-400">
+                        {isOfflineMode ? "OFFLINE_VERIFIED (/sdcard/Android)" : "AUTHENTICATED (Cfx License #32a19b)"}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Simulated diagnostic chart log */}
                 <div className="p-4 bg-black/40 border border-fivem-border/60 rounded-xl font-mono text-[10px] text-green-500 h-32 overflow-y-auto">
-                  <div>[Client HUD] Connected successfully to network thread index #{server.id.substring(0, 5)}</div>
-                  <div>[Client HUD] Handshaking VOIP local server routing channels (128bit encryption keys)...</div>
-                  <div>[Client HUD] Successfully loaded 412 server script modifications.</div>
-                  <div>[Client HUD] Telemetry sync rate locked at 25ms interval.</div>
-                  <div>[Client HUD] Live GPS tracking ready at vector grid.</div>
-                  <div>[Client HUD] Standard dispatch alerts synced: Ready listening.</div>
+                  {isOfflineMode ? (
+                    <>
+                      <div>[Offline Launcher Thread] Initialized successfully as Standalone APK Sandbox local loopback...</div>
+                      <div>[Offline Launcher Thread] Bypassing online cfx.re load-balancer router checks (Local mounter bypass).</div>
+                      <div>[Offline Launcher Thread] Mounted 12.42 GB files system pack: /sdcard/Android/obb/com.fivem.offline/</div>
+                      <div>[Offline Launcher Thread] Successfully linked internal trainer_hud cheat structure.</div>
+                      <div>[Offline Launcher Thread] Loopback speed locked at 0ms latency render. Ready to play!</div>
+                    </>
+                  ) : (
+                    <>
+                      <div>[Client HUD] Connected successfully to network thread index #{server.id.substring(0, 5)}</div>
+                      <div>[Client HUD] Handshaking VOIP local server routing channels (128bit encryption keys)...</div>
+                      <div>[Client HUD] Successfully loaded 412 server script modifications.</div>
+                      <div>[Client HUD] Telemetry sync rate locked at 25ms interval.</div>
+                      <div>[Client HUD] Live GPS tracking ready at vector grid.</div>
+                      <div>[Client HUD] Standard dispatch alerts synced: Ready listening.</div>
+                    </>
+                  )}
                 </div>
               </div>
             )}

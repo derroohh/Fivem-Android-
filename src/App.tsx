@@ -11,7 +11,9 @@ import {
   Users,
   Layers,
   ChevronDown,
-  Info
+  Info,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import { ClientSettings, Server } from "./types";
 import HomeFeed from "./components/HomeFeed";
@@ -30,7 +32,8 @@ const DEFAULT_SETTINGS: ClientSettings = {
   limitFPS: true,
   fpsLimit: 60,
   devConsoleEnabled: true,
-  simulatedPingOffset: 15
+  simulatedPingOffset: 15,
+  isOfflineMode: true
 };
 
 const AVATAR_MAP: Record<string, string> = {
@@ -251,6 +254,7 @@ export default function App() {
         userName={settings.userName}
         avatarUrl={activeAvatarUrl}
         onDisconnect={handleDisconnect}
+        isOfflineMode={!!settings.isOfflineMode}
       />
     );
   }
@@ -268,17 +272,41 @@ export default function App() {
           <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => handleTabChange("home")}>
             <span className="text-3xl font-extrabold font-display text-fivem-orange glow-orange tracking-tight">Cfx</span>
             <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-fivem-orange/10 border border-fivem-orange/30 text-fivem-orange font-bold uppercase tracking-wider">
-              Android Launcher
+              {settings.isOfflineMode ? "Offline APK" : "Android Client"}
             </span>
           </div>
         </div>
 
         {/* Header Right utilities */}
         <div className="flex items-center gap-3.5">
+          {/* Offline/Online Mode Selector Button */}
+          <button
+            id="toggle-offline-header"
+            onClick={() => handleSaveSettings({ ...settings, isOfflineMode: !settings.isOfflineMode })}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all cursor-pointer ${
+              settings.isOfflineMode 
+                ? "bg-amber-500/10 border-amber-500/40 text-amber-400 font-semibold" 
+                : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+            }`}
+            title="Toggle Offline APK mode"
+          >
+            {settings.isOfflineMode ? <WifiOff size={13} /> : <Wifi size={13} />}
+            <span className="hidden xs:inline">{settings.isOfflineMode ? "OFFLINE APK" : "CFX LOBBY"}</span>
+          </button>
+
           {/* Active stats */}
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>241,502 players active on web</span>
+          <div className="hidden md:flex items-center gap-1.5 text-xs text-gray-400 font-mono">
+            {settings.isOfflineMode ? (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-amber-400">offline: Local emulator active</span>
+              </>
+            ) : (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>241,502 players active</span>
+              </>
+            )}
           </div>
 
           {/* Developer console trigger key if activated */}
@@ -308,7 +336,7 @@ export default function App() {
             </div>
             <div className="hidden md:block">
               <div className="text-[10px] font-bold text-white truncate max-w-[5rem]">{settings.userName}</div>
-              <div className="text-[8px] text-gray-500 font-mono">Cfx License Valid</div>
+              <div className="text-[8px] text-gray-500 font-mono">{settings.isOfflineMode ? "APK Sandbox" : "Cfx License Valid"}</div>
             </div>
           </button>
         </div>
@@ -327,8 +355,9 @@ export default function App() {
           <HomeFeed 
             onNavigateToServers={() => handleTabChange("servers")}
             onNavigateToSocial={() => handleTabChange("social")}
-            activePlayersCount={241502}
-            activeServersCount={8432}
+            activePlayersCount={settings.isOfflineMode ? 0 : 241502}
+            activeServersCount={settings.isOfflineMode ? 1 : 8432}
+            isOfflineMode={!!settings.isOfflineMode}
           />
         )}
 
@@ -338,6 +367,7 @@ export default function App() {
             favorites={favorites}
             history={history}
             toggleFavorite={handleToggleFavorite}
+            isOfflineMode={!!settings.isOfflineMode}
           />
         )}
 

@@ -11,7 +11,11 @@ import {
   Smartphone,
   ChevronRight,
   Sparkles,
-  Users
+  Users,
+  HardDrive,
+  Cpu,
+  Layers,
+  WifiOff
 } from "lucide-react";
 import { NewsItem } from "../types";
 import { motion, AnimatePresence } from "motion/react";
@@ -60,17 +64,25 @@ interface HomeFeedProps {
   onNavigateToSocial: () => void;
   activePlayersCount: number;
   activeServersCount: number;
+  isOfflineMode?: boolean;
 }
 
 export default function HomeFeed({ 
   onNavigateToServers, 
   onNavigateToSocial,
   activePlayersCount,
-  activeServersCount
+  activeServersCount,
+  isOfflineMode = false
 }: HomeFeedProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [news, setNews] = useState<NewsItem[]>(INITIAL_NEWS);
   const [likedArticles, setLikedArticles] = useState<Record<string, boolean>>({});
+  
+  // Interactive simulator states for Offline APK action checks
+  const [diagnosing, setDiagnosing] = useState(false);
+  const [diagOutput, setDiagOutput] = useState<string | null>(null);
+  const [ramOptimizedCount, setRamOptimizedCount] = useState<string | null>(null);
+  const [showFsLines, setShowFsLines] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -93,6 +105,23 @@ export default function HomeFeed({
   };
 
   const currentNewsItem = news[currentSlide];
+
+  // Simulator mechanics
+  const handleDiagnose = () => {
+    setDiagnosing(true);
+    setDiagOutput("Scanning /sdcard/Android/obb/com.fivem.offline/ packets...");
+    setTimeout(() => {
+      setDiagnosing(false);
+      setDiagOutput("✓ base_map.obb INTEGRAL // ✓ physics.meta SIGNED // ✓ audio.rpf DECRYPTED. All 32 resources verified successfully!");
+    }, 1200);
+  };
+
+  const handleRamOptimize = () => {
+    setRamOptimizedCount("Optimizing threads...");
+    setTimeout(() => {
+      setRamOptimizedCount("Cleared 328MB. Low-temperature CPU profiles pushed to ARM cores. Frame pacing stabilized!");
+    }, 800);
+  };
 
   return (
     <div id="home-feed-screen" className="space-y-6 pb-20">
@@ -170,67 +199,126 @@ export default function HomeFeed({
 
       {/* Grid of Launcher Statistics & Service Health */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Statistics Box */}
-        <div id="stats-widget" className="glass-panel rounded-xl p-4 flex items-center justify-between shadow-lg">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-              <Users size={12} className="text-fivem-orange" />
-              Active Global Players
-            </span>
-            <div className="text-2xl font-bold font-mono text-white glow-orange">
-              {activePlayersCount.toLocaleString()}
+        {isOfflineMode ? (
+          <>
+            {/* OBB Storage Box */}
+            <div id="stats-widget-offline" className="glass-panel rounded-xl p-4 flex items-center justify-between shadow-lg border border-amber-500/20">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                  <HardDrive size={12} />
+                  Installed Base Package
+                </span>
+                <div className="text-2xl font-bold font-mono text-white">
+                  12.42 GB
+                </div>
+                <p className="text-[10px] text-gray-400">com.fivem.offline (verified)</p>
+              </div>
+              <div className="bg-amber-500/10 p-3 rounded-lg border border-amber-500/25">
+                <HardDrive className="text-amber-400" size={24} />
+              </div>
             </div>
-            <p className="text-[10px] text-gray-500">Live peak synced across all devices</p>
-          </div>
-          <div className="bg-fivem-orange/10 p-3 rounded-lg border border-fivem-orange/20 animate-pulse">
-            <Activity className="text-fivem-orange" size={24} />
-          </div>
-        </div>
 
-        {/* Servers Box */}
-        <div id="servers-widget" className="glass-panel rounded-xl p-4 flex items-center justify-between shadow-lg">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-              <Flame size={12} className="text-orange-500" />
-              Indexed Servers
-            </span>
-            <div className="text-2xl font-bold font-mono text-white">
-              {activeServersCount.toLocaleString()}
+            {/* Offline Engine Box */}
+            <div id="servers-widget-offline" className="glass-panel rounded-xl p-4 flex items-center justify-between shadow-lg border border-amber-500/20">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                  <Cpu size={12} />
+                  Vulkan GPU Backend
+                </span>
+                <div className="text-2xl font-bold font-mono text-emerald-400">
+                  ARM64-v8a
+                </div>
+                <p className="text-[10px] text-gray-400">Stable Build API v1.3.4</p>
+              </div>
+              <div className="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20">
+                <Cpu className="text-emerald-400" size={24} />
+              </div>
             </div>
-            <p className="text-[10px] text-gray-500">Live verified RP, Drift, & Zombie games</p>
-          </div>
-          <div className="bg-orange-500/10 p-3 rounded-lg border border-orange-500/20">
-            <Flame className="text-orange-500" size={24} />
-          </div>
-        </div>
 
-        {/* Cfx.re Services Integrity */}
-        <div id="services-health" className="glass-panel rounded-xl p-4 shadow-lg flex flex-col justify-between">
-          <div className="flex items-center justify-between border-b border-fivem-border/40 pb-2 mb-2">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Cfx.re Services</span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono border border-emerald-500/30">
-              ALL SYSTEMS UP
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-y-1.5 text-xs">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 size={11} className="text-emerald-400" />
-              <span className="text-gray-300">Web Lobby</span>
+            {/* Offline Modules Box */}
+            <div id="services-health-offline" className="glass-panel rounded-xl p-4 shadow-lg border border-amber-500/20 flex flex-col justify-between">
+              <div className="flex items-center justify-between border-b border-fivem-border/40 pb-2 mb-2">
+                <span className="text-xs font-semibold text-amber-400 uppercase tracking-widest flex items-center gap-1">
+                  <Layers size={11} />
+                  APK Core Modules
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono border border-emerald-500/30">
+                  LOADED
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-y-1.5 text-[10px] font-mono text-gray-300">
+                <div className="flex items-center gap-1 text-emerald-400">✓ cfx_local.so</div>
+                <div className="flex items-center gap-1 text-emerald-400">✓ script_trainer</div>
+                <div className="flex items-center gap-1 text-emerald-400">✓ obb_mounter</div>
+                <div className="flex items-center gap-1 text-emerald-400">✓ audio_thread</div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 size={11} className="text-emerald-400" />
-              <span className="text-gray-300">Cfx Auth</span>
+          </>
+        ) : (
+          <>
+            {/* Statistics Box */}
+            <div id="stats-widget" className="glass-panel rounded-xl p-4 flex items-center justify-between shadow-lg">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                  <Users size={12} className="text-fivem-orange" />
+                  Active Global Players
+                </span>
+                <div className="text-2xl font-bold font-mono text-white glow-orange">
+                  {activePlayersCount.toLocaleString()}
+                </div>
+                <p className="text-[10px] text-gray-500">Live peak synced across all devices</p>
+              </div>
+              <div className="bg-fivem-orange/10 p-3 rounded-lg border border-fivem-orange/20 animate-pulse">
+                <Activity className="text-fivem-orange" size={24} />
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 size={11} className="text-emerald-400" />
-              <span className="text-gray-300">Server List</span>
+
+            {/* Servers Box */}
+            <div id="servers-widget" className="glass-panel rounded-xl p-4 flex items-center justify-between shadow-lg">
+              <div className="space-y-1">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                  <Flame size={12} className="text-orange-500" />
+                  Indexed Servers
+                </span>
+                <div className="text-2xl font-bold font-mono text-white">
+                  {activeServersCount.toLocaleString()}
+                </div>
+                <p className="text-[10px] text-gray-500">Live verified RP, Drift, & Zombie games</p>
+              </div>
+              <div className="bg-orange-500/10 p-3 rounded-lg border border-orange-500/20">
+                <Flame className="text-orange-500" size={24} />
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle2 size={11} className="text-emerald-400" />
-              <span className="text-gray-300">Content CDN</span>
+
+            {/* Cfx.re Services Integrity */}
+            <div id="services-health" className="glass-panel rounded-xl p-4 shadow-lg flex flex-col justify-between">
+              <div className="flex items-center justify-between border-b border-fivem-border/40 pb-2 mb-2">
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Cfx.re Services</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono border border-emerald-500/30">
+                  ALL SYSTEMS UP
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-y-1.5 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 size={11} className="text-emerald-400" />
+                  <span className="text-gray-300">Web Lobby</span>
+				</div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 size={11} className="text-emerald-400" />
+                  <span className="text-gray-300">Cfx Auth</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 size={11} className="text-emerald-400" />
+                  <span className="text-gray-300">Server List</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 size={11} className="text-emerald-400" />
+                  <span className="text-gray-300">Content CDN</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Two Column Layout: Quick Actions & News Column */}
@@ -297,43 +385,147 @@ export default function HomeFeed({
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <Smartphone size={18} className="text-fivem-orange" />
-            <h2 className="text-lg font-bold font-display text-white uppercase tracking-tight">Android Companion</h2>
+            <h2 className="text-lg font-bold font-display text-white uppercase tracking-tight">
+              {isOfflineMode ? "Offline Command Center" : "Android Companion"}
+            </h2>
           </div>
 
-          <div className="glass-panel rounded-xl p-5 border border-fivem-border/60 bg-gradient-to-br from-fivem-surface to-fivem-dark relative overflow-hidden">
-            <div className="absolute -right-16 -bottom-16 w-32 h-32 bg-fivem-orange/10 rounded-full blur-2xl" />
-            
-            <h3 className="text-sm font-bold text-gray-100 flex items-center gap-2 mb-3">
-              <span className="w-1.5 h-4 bg-fivem-orange rounded-full inline-block" />
-              Quick Actions
-            </h3>
-            
-            <div className="space-y-3">
-              <button 
-                id="action-browse-servers"
-                onClick={onNavigateToServers}
-                className="w-full flex items-center justify-between p-3 rounded-lg bg-fivem-orange/[0.06] hover:bg-fivem-orange/20 border border-fivem-orange/20 hover:border-fivem-orange/40 transition-all text-left group"
-              >
-                <div>
-                  <div className="text-xs font-semibold text-white group-hover:text-fivem-orange transition-colors">Server Explorer</div>
-                  <div className="text-[10px] text-gray-400">Search and join 8,000+ communities</div>
-                </div>
-                <ChevronRight size={16} className="text-fivem-orange transform transition-transform group-hover:translate-x-1" />
-              </button>
+          {isOfflineMode ? (
+            /* EXCLUSIVE INTERACTIVE OFFLINE APK CONTROL PANEL */
+            <div className="glass-panel rounded-xl p-5 border border-amber-500/30 bg-gradient-to-br from-[#1c1204] to-fivem-dark space-y-4 relative overflow-hidden">
+              <div className="absolute -right-16 -bottom-16 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl" />
+              
+              <div className="flex items-center justify-between border-b border-fivem-border/40 pb-2">
+                <h3 className="text-xs font-bold font-mono text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <WifiOff size={12} />
+                  Offline APK Diagnostics
+                </h3>
+                <span className="text-[10px] text-gray-500 font-mono">v2.4 offline</span>
+              </div>
 
-              <button 
-                id="action-global-social"
-                onClick={onNavigateToSocial}
-                className="w-full flex items-center justify-between p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.06] border border-fivem-border hover:border-gray-500 transition-all text-left group"
+              <div className="space-y-2.5">
+                {/* 1. Diagnose OBB Action */}
+                <button
+                  id="diag-obb-btn"
+                  onClick={handleDiagnose}
+                  disabled={diagnosing}
+                  className="w-full text-left p-2.5 rounded-lg bg-black/40 hover:bg-black/60 border border-fivem-border hover:border-amber-500/40 transition-all font-mono text-[11px] text-white flex justify-between items-center cursor-pointer"
+                >
+                  <span>{diagnosing ? "🔄 Executing file hashes scan..." : "⚙️ Diagnose Local OBB Files"}</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold">SHA-256</span>
+                </button>
+
+                {/* 2. RAM Cleaner */}
+                <button
+                  id="diag-ram-btn"
+                  onClick={handleRamOptimize}
+                  className="w-full text-left p-2.5 rounded-lg bg-black/40 hover:bg-black/60 border border-fivem-border hover:border-amber-500/40 transition-all font-mono text-[11px] text-white flex justify-between items-center cursor-pointer"
+                >
+                  <span>🚀 Clean Memory Heap</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold">Optimize</span>
+                </button>
+
+                {/* 3. File Directory tree toggle */}
+                <button
+                  id="diag-fs-btn"
+                  onClick={() => setShowFsLines(prev => !prev)}
+                  className="w-full text-left p-2.5 rounded-lg bg-black/40 hover:bg-black/60 border border-fivem-border hover:border-amber-500/40 transition-all font-mono text-[11px] text-white flex justify-between items-center cursor-pointer"
+                >
+                  <span>📁 View Emulated Filesystem</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold">{showFsLines ? "Close" : "Inspect"}</span>
+                </button>
+              </div>
+
+              {/* Status display from actions */}
+              <AnimatePresence mode="popLayout">
+                {diagOutput && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="p-2.5 bg-black/60 border border-amber-500/30 rounded-lg font-mono text-[10px] text-amber-300 leading-normal"
+                  >
+                    <span className="text-white font-bold block mb-0.5">[Filesystem Scan]</span>
+                    {diagOutput}
+                  </motion.div>
+                )}
+
+                {ramOptimizedCount && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="p-2.5 bg-black/60 border border-emerald-500/30 rounded-lg font-mono text-[10px] text-emerald-300 leading-normal"
+                  >
+                    <span className="text-white font-bold block mb-0.5">[CPU Governor]</span>
+                    {ramOptimizedCount}
+                  </motion.div>
+                )}
+
+                {showFsLines && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="p-2.5 bg-black/85 border border-fivem-border rounded-lg font-mono text-[9px] text-gray-400 leading-relaxed whitespace-pre"
+                  >
+                    {"/sdcard/Android/obb/com.fivem/\n"}
+                    {"├── main.43095.cfx.obb (12.4 GB)\n"}
+                    {"├── patch.3095.cfx.obb (1.8 GB)\n"}
+                    {"├── vehicle_sound_cache.bin (450 MB)\n"}
+                    {"└── custom_trainer.ini (4 KB)\n"}
+                    {"\n"}
+                    {"/storage/emulated/0/FiveM/cache/\n"}
+                    {"└── local_game_save_slot_01.dat (12 KB)"}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Offline Sandbox execution callout */}
+              <button
+                id="launch-sandbox-action"
+                onClick={onNavigateToServers}
+                className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-black rounded-xl text-xs font-bold font-mono tracking-wide text-center uppercase transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <div>
-                  <div className="text-xs font-semibold text-white">Cfx Lounge Chat</div>
-                  <div className="text-[10px] text-gray-400">Chat with players, sync active list</div>
-                </div>
-                <ChevronRight size={16} className="text-gray-400 transform transition-transform group-hover:translate-x-1" />
+                🎮 Boot Offline Sandbox Mode
               </button>
             </div>
-          </div>
+          ) : (
+            <div className="glass-panel rounded-xl p-5 border border-fivem-border/60 bg-gradient-to-br from-fivem-surface to-fivem-dark relative overflow-hidden">
+              <div className="absolute -right-16 -bottom-16 w-32 h-32 bg-fivem-orange/10 rounded-full blur-2xl" />
+              
+              <h3 className="text-sm font-bold text-gray-100 flex items-center gap-2 mb-3">
+                <span className="w-1.5 h-4 bg-fivem-orange rounded-full inline-block" />
+                Quick Actions
+              </h3>
+              
+              <div className="space-y-3">
+                <button 
+                  id="action-browse-servers"
+                  onClick={onNavigateToServers}
+                  className="w-full flex items-center justify-between p-3 rounded-lg bg-fivem-orange/[0.06] hover:bg-fivem-orange/20 border border-fivem-orange/20 hover:border-fivem-orange/40 transition-all text-left group animate-pulse"
+                >
+                  <div>
+                    <div className="text-xs font-semibold text-white group-hover:text-fivem-orange transition-colors">Server Explorer</div>
+                    <div className="text-[10px] text-gray-400">Search and join 8,000+ communities</div>
+                  </div>
+                  <ChevronRight size={16} className="text-fivem-orange transform transition-transform group-hover:translate-x-1" />
+                </button>
+
+                <button 
+                  id="action-global-social"
+                  onClick={onNavigateToSocial}
+                  className="w-full flex items-center justify-between p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.06] border border-fivem-border hover:border-gray-500 transition-all text-left group"
+                >
+                  <div>
+                    <div className="text-xs font-semibold text-white">Cfx Lounge Chat</div>
+                    <div className="text-[10px] text-gray-400">Chat with players, sync active list</div>
+                  </div>
+                  <ChevronRight size={16} className="text-gray-400 transform transition-transform group-hover:translate-x-1" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Tips Widget */}
           <div className="glass-panel rounded-xl p-5 border border-fivem-border/40">
@@ -342,7 +534,10 @@ export default function HomeFeed({
               Android Tip of the Day
             </h3>
             <p className="text-xs text-gray-300 leading-relaxed">
-              Enable "Save UI Audios" in Settings to hear the original mechanical click sound effects when switching tabs, replicating the FiveM Desktop layout feel!
+              {isOfflineMode 
+                ? "Did you know? In Offline APK Mode, you can spawn any of the high-end sports cars or emergency vehicles in singleplayer, customize your weather, or use local trainers without needing cellular telemetry!"
+                : "Enable \"Save UI Audios\" in Settings to hear the original mechanical click sound effects when switching tabs, replicating the FiveM Desktop layout feel!"
+              }
             </p>
           </div>
 

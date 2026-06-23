@@ -26,7 +26,63 @@ interface ServerBrowserProps {
   favorites: string[];
   history: string[];
   toggleFavorite: (serverId: string) => void;
+  isOfflineMode?: boolean;
 }
+
+const OFFLINE_SERVERS: Server[] = [
+  {
+    id: "offline-story-sandbox",
+    name: "Local Singleplayer Story Mode Sandbox",
+    shortName: "Solo Story Mode",
+    description: "Launch direct offline emulation on your handset. Full Los Santos sandbox, localized trainer menu, high-end vehicle spawners, and interactive radio players. Operates 100% offline from the OBB package.",
+    players: 1,
+    maxPlayers: 1,
+    ping: 0,
+    tags: ["Offline", "Sandbox", "StoryMode", "Trainer"],
+    owner: "com.fivem.offline",
+    region: "Local Emulator loopback",
+    iconUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=200",
+    bannerUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=800",
+    upvotes: 9999,
+    gameBuild: "b3095 (Chop Shop)",
+    ipAddress: "127.0.0.1:30120",
+    featured: true
+  },
+  {
+    id: "offline-lan-coop",
+    name: "LAN Bluetooth & WiFi Couch Co-op",
+    shortName: "LAN Co-op Lobbies",
+    description: "Nearby devices discoverer is active. Connect to other smartphones on the same local hotspot for lag-free multiplayer racing and shared sandbox worlds.",
+    players: 0,
+    maxPlayers: 8,
+    ping: 1,
+    tags: ["LAN", "Offline", "Bluetooth", "Nearby"],
+    owner: "P2P Hub",
+    region: "Subnet Discovery",
+    iconUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=200",
+    bannerUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=800",
+    upvotes: 450,
+    gameBuild: "b3095 (Chop Shop)",
+    ipAddress: "192.168.1.53:30121"
+  },
+  {
+    id: "offline-bots-training",
+    name: "Private Offline Bot AI Training Arena [200 Bots]",
+    shortName: "AI Battleground",
+    description: "Emulate complex civilian and gang AI behavior. Test defensive weapons layout, coordinate heist scenarios with tactical bot squads completely offline.",
+    players: 200,
+    maxPlayers: 200,
+    ping: 0,
+    tags: ["AI Bots", "Offline", "Training", "Weapons"],
+    owner: "Local Core VM",
+    region: "Thread Co-processing",
+    iconUrl: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=200",
+    bannerUrl: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&q=80&w=800",
+    upvotes: 1530,
+    gameBuild: "b3095 (Chop Shop)",
+    ipAddress: "127.0.0.1:30122"
+  }
+];
 
 const INITIAL_SERVERS: Server[] = [
   {
@@ -188,7 +244,13 @@ const MOCK_ONLINE_PLAYERS: Record<string, string[]> = {
   ]
 };
 
-export default function ServerBrowser({ onConnect, favorites, history, toggleFavorite }: ServerBrowserProps) {
+export default function ServerBrowser({ 
+  onConnect, 
+  favorites, 
+  history, 
+  toggleFavorite,
+  isOfflineMode = false
+}: ServerBrowserProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<"players" | "ping" | "upvotes" | "name">("upvotes");
@@ -220,7 +282,8 @@ export default function ServerBrowser({ onConnect, favorites, history, toggleFav
   };
 
   const filteredServers = useMemo(() => {
-    return servers.filter(server => {
+    const activeList = isOfflineMode ? OFFLINE_SERVERS : servers;
+    return activeList.filter(server => {
       // Search text matches (name, short name, tags, description)
       const matchesSearch = 
         server.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -253,7 +316,7 @@ export default function ServerBrowser({ onConnect, favorites, history, toggleFav
       if (sortBy === "upvotes") return b.upvotes - a.upvotes;
       return a.name.localeCompare(b.name);
     });
-  }, [servers, searchTerm, selectedTags, activeRegion, sortBy, tabType, favorites, history]);
+  }, [servers, isOfflineMode, searchTerm, selectedTags, activeRegion, sortBy, tabType, favorites, history]);
 
   const handleDirectConnect = (e: React.FormEvent) => {
     e.preventDefault();
@@ -425,6 +488,19 @@ export default function ServerBrowser({ onConnect, favorites, history, toggleFav
       </div>
 
       {/* Server List Display */}
+      {isOfflineMode && (
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-4 flex items-center justify-between text-xs text-amber-300">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping inline-block shrink-0" />
+            <div>
+              <span className="font-bold uppercase tracking-wider text-amber-400 block mb-0.5">📶 Offline APK Mode Connected</span>
+              No cellular data required. Showing local standalone game seeds, LAN discoverable servers, and bot-simulation arenas. Singleplayer Sandbox is fully operational.
+            </div>
+          </div>
+          <span className="text-[10px] bg-amber-500/10 px-2 py-1 border border-amber-500/20 font-mono rounded uppercase tracking-widest hidden sm:inline font-bold">P2P v2.4</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredServers.length > 0 ? (
           filteredServers.map((server, rank) => {

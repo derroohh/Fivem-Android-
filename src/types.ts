@@ -73,4 +73,5 @@ export interface ClientSettings {
   fpsLimit: number;
   devConsoleEnabled: boolean;
   simulatedPingOffset: number;
+  isOfflineMode?: boolean;
 }
